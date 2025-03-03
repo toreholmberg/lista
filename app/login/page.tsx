@@ -8,8 +8,7 @@ import { Input } from "@/components/ui/input"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -17,50 +16,28 @@ export default function LoginPage() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
+    setMessage(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithOtp({
         email,
-        password,
-      })
-
-      if (error) {
-        setError(error.message)
-        return
-      }
-
-      router.refresh()
-      router.push("/")
-    } catch (err) {
-      setError("An unexpected error occurred")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
         options: {
+          shouldCreateUser: false,
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
 
       if (error) {
-        setError(error.message)
+        setMessage({ text: error.message, type: 'error' })
         return
       }
 
-      setError("Check your email for the confirmation link")
+      setMessage({ 
+        text: "Check your email for the magic link to log in!", 
+        type: 'success' 
+      })
     } catch (err) {
-      setError("An unexpected error occurred")
+      setMessage({ text: "An unexpected error occurred", type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -73,8 +50,11 @@ export default function LoginPage() {
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight">
             Sign in to your account
           </h2>
+          <p className="mt-2 text-center text-sm text-muted-foreground">
+            We'll send you a magic link to your email
+          </p>
         </div>
-        <form className="mt-8 space-y-6">
+        <form className="mt-8 space-y-6" onSubmit={handleSignIn}>
           <div className="space-y-4 rounded-md shadow-sm">
             <div>
               <Input
@@ -88,43 +68,23 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
           </div>
 
-          {error && (
-            <div className="text-center text-sm text-red-500">
-              {error}
+          {message && (
+            <div className={`text-center text-sm ${
+              message.type === 'error' ? 'text-red-500' : 'text-green-500'
+            }`}>
+              {message.text}
             </div>
           )}
 
-          <div className="space-y-3">
+          <div>
             <Button
               type="submit"
               className="w-full"
-              onClick={handleSignIn}
               disabled={loading}
             >
-              {loading ? "Loading..." : "Sign in"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleSignUp}
-              disabled={loading}
-            >
-              Sign up
+              {loading ? "Sending magic link..." : "Send magic link"}
             </Button>
           </div>
         </form>
