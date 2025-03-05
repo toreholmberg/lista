@@ -1,22 +1,25 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { createClient } from "@/utils/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
-  const supabase = createClient()
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
 
   const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setMessage(null)
+    e.preventDefault();
+    setLoading(true);
+    setMessage(null);
 
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -25,23 +28,23 @@ export default function LoginPage() {
           shouldCreateUser: false,
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
-      })
+      });
 
       if (error) {
-        setMessage({ text: error.message, type: 'error' })
-        return
+        setMessage({ text: error.message, type: "error" });
+        return;
       }
 
-      setMessage({ 
-        text: "Check your email for the magic link to log in!", 
-        type: 'success' 
-      })
+      setMessage({
+        text: "Check your email for the magic link to log in!",
+        type: "success",
+      });
     } catch (err) {
-      setMessage({ text: "An unexpected error occurred", type: 'error' })
+      setMessage({ text: "An unexpected error occurred", type: "error" });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center py-2">
@@ -71,24 +74,22 @@ export default function LoginPage() {
           </div>
 
           {message && (
-            <div className={`text-center text-sm ${
-              message.type === 'error' ? 'text-red-500' : 'text-green-500'
-            }`}>
+            <div
+              className={`text-center text-sm ${
+                message.type === "error" ? "text-red-500" : "text-green-500"
+              }`}
+            >
               {message.text}
             </div>
           )}
 
           <div>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Sending magic link..." : "Send magic link"}
             </Button>
           </div>
         </form>
       </div>
     </div>
-  )
-} 
+  );
+}

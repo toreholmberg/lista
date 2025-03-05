@@ -1,114 +1,120 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import { Plus, Star, StarOff, ChevronLeft, Search, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
-import Link from "next/link"
-import { useAppContext } from "@/context/AppContext"
-import type { Item } from "@/types"
+import { useState, useRef, useEffect } from "react";
+import { Plus, Star, StarOff, ChevronLeft, Search, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import Link from "next/link";
+import { useAppContext } from "@/context/AppContext";
+import type { Item } from "@/types";
 
 interface ListViewProps {
-  listId: string
+  listId: string;
 }
 
 interface ListItemWithDetails extends Item {
-  completed: boolean
+  completed: boolean;
 }
 
 export default function ListView({ listId }: ListViewProps) {
-  const { 
-    lists, 
+  const {
+    lists,
     items,
     listItems,
-    isLoading, 
-    error, 
-    addItem, 
-    toggleItemCompleted, 
-    toggleItemEssential, 
+    isLoading,
+    error,
+    addItem,
+    toggleItemCompleted,
+    toggleItemEssential,
     removeItem,
-    findItemsByName
-  } = useAppContext()
-  
-  const [newItemName, setNewItemName] = useState("")
-  const [suggestions, setSuggestions] = useState<Item[]>([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1)
-  const suggestionsRef = useRef<HTMLDivElement>(null)
+    findItemsByName,
+  } = useAppContext();
+
+  const [newItemName, setNewItemName] = useState("");
+  const [suggestions, setSuggestions] = useState<Item[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Update suggestions when input changes
   useEffect(() => {
     if (newItemName.trim()) {
-      const matches = findItemsByName(newItemName)
-      setSuggestions(matches)
-      setShowSuggestions(matches.length > 0)
-      setSelectedSuggestionIndex(-1)
+      const matches = findItemsByName(newItemName);
+      setSuggestions(matches);
+      setShowSuggestions(matches.length > 0);
+      setSelectedSuggestionIndex(-1);
     } else {
-      setSuggestions([])
-      setShowSuggestions(false)
+      setSuggestions([]);
+      setShowSuggestions(false);
     }
-  }, [newItemName, findItemsByName])
+  }, [newItemName, findItemsByName]);
 
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
-        setShowSuggestions(false)
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
       }
-    }
-    
-    document.addEventListener("mousedown", handleClickOutside)
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleAddItem = () => {
-    if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < suggestions.length) {
+    if (
+      selectedSuggestionIndex >= 0 &&
+      selectedSuggestionIndex < suggestions.length
+    ) {
       // Use the selected suggestion
-      addItem(suggestions[selectedSuggestionIndex].name, listId)
+      addItem(suggestions[selectedSuggestionIndex].name, listId);
     } else {
       // Use the input text
-      addItem(newItemName, listId)
+      addItem(newItemName, listId);
     }
-    setNewItemName("")
-    setShowSuggestions(false)
-  }
+    setNewItemName("");
+    setShowSuggestions(false);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      handleAddItem()
+      handleAddItem();
     } else if (e.key === "ArrowDown" && showSuggestions) {
-      e.preventDefault()
-      setSelectedSuggestionIndex(prev => 
-        prev < suggestions.length - 1 ? prev + 1 : prev
-      )
+      e.preventDefault();
+      setSelectedSuggestionIndex((prev) =>
+        prev < suggestions.length - 1 ? prev + 1 : prev,
+      );
     } else if (e.key === "ArrowUp" && showSuggestions) {
-      e.preventDefault()
-      setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : 0)
+      e.preventDefault();
+      setSelectedSuggestionIndex((prev) => (prev > 0 ? prev - 1 : 0));
     } else if (e.key === "Escape") {
-      setShowSuggestions(false)
+      setShowSuggestions(false);
     }
-  }
+  };
 
   const handleSuggestionClick = (suggestion: Item) => {
-    addItem(suggestion.name, listId)
-    setNewItemName("")
-    setShowSuggestions(false)
-  }
+    addItem(suggestion.name, listId);
+    setNewItemName("");
+    setShowSuggestions(false);
+  };
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
       </div>
-    )
+    );
   }
 
   // Ensure lists is always an array
-  const safeListsArray = Array.isArray(lists) ? lists : []
-  const list = safeListsArray.find(l => l.id === listId)
+  const safeListsArray = Array.isArray(lists) ? lists : [];
+  const list = safeListsArray.find((l) => l.id === listId);
 
   if (!list) {
     return (
@@ -123,29 +129,29 @@ export default function ListView({ listId }: ListViewProps) {
         </div>
         <div className="text-center py-4">List not found</div>
       </div>
-    )
+    );
   }
 
   // Get the items for this list
   const currentListItems: ListItemWithDetails[] = listItems
-    .filter(li => li.list_id === listId)
-    .map(li => {
-      const item = items.find(i => i.id === li.item_id)
-      if (!item) return null
+    .filter((li) => li.list_id === listId)
+    .map((li) => {
+      const item = items.find((i) => i.id === li.item_id);
+      if (!item) return null;
       return {
         ...item,
-        completed: li.completed
-      }
+        completed: li.completed,
+      };
     })
     .filter((item): item is ListItemWithDetails => item !== null)
     .sort((a, b) => {
       // First sort by completion status (uncompleted first)
       if (a.completed !== b.completed) {
-        return a.completed ? 1 : -1
+        return a.completed ? 1 : -1;
       }
       // Then sort by name for items with the same completion status
-      return a.name.localeCompare(b.name)
-    })
+      return a.name.localeCompare(b.name);
+    });
 
   return (
     <div className="space-y-4">
@@ -168,21 +174,26 @@ export default function ListView({ listId }: ListViewProps) {
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
               onKeyDown={handleKeyDown}
-              onFocus={() => newItemName.trim() && setSuggestions(findItemsByName(newItemName))}
+              onFocus={() =>
+                newItemName.trim() &&
+                setSuggestions(findItemsByName(newItemName))
+              }
               className="flex-1"
             />
             {showSuggestions && (
-              <div 
+              <div
                 ref={suggestionsRef}
                 className="absolute z-10 mt-1 w-full bg-background border rounded-md shadow-lg max-h-60 overflow-auto"
               >
                 {suggestions.length > 0 ? (
                   <ul className="py-1">
                     {suggestions.map((suggestion, index) => (
-                      <li 
+                      <li
                         key={suggestion.id}
                         className={`px-3 py-2 cursor-pointer flex items-center gap-2 ${
-                          index === selectedSuggestionIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'
+                          index === selectedSuggestionIndex
+                            ? "bg-accent text-accent-foreground"
+                            : "hover:bg-muted"
                         }`}
                         onClick={() => handleSuggestionClick(suggestion)}
                       >
@@ -195,7 +206,9 @@ export default function ListView({ listId }: ListViewProps) {
                     ))}
                   </ul>
                 ) : (
-                  <div className="px-3 py-2 text-muted-foreground">No matches found</div>
+                  <div className="px-3 py-2 text-muted-foreground">
+                    No matches found
+                  </div>
                 )}
               </div>
             )}
@@ -205,24 +218,27 @@ export default function ListView({ listId }: ListViewProps) {
             <span className="sr-only">Add item</span>
           </Button>
         </div>
-        {error && (
-          <div className="text-sm text-red-500">
-            {error}
-          </div>
-        )}
+        {error && <div className="text-sm text-red-500">{error}</div>}
       </div>
 
       <ul className="space-y-2">
         {currentListItems.length === 0 ? (
-          <li className="text-center text-muted-foreground py-4">No items in this list</li>
+          <li className="text-center text-muted-foreground py-4">
+            No items in this list
+          </li>
         ) : (
           currentListItems.map((item) => (
-            <li key={item.id} className="flex items-center gap-3 p-3 border rounded-md bg-card">
+            <li
+              key={item.id}
+              className="flex items-center gap-3 p-3 border rounded-md bg-card"
+            >
               <Checkbox
                 checked={item.completed}
                 onCheckedChange={() => toggleItemCompleted(item.id, listId)}
               />
-              <span className={`flex-1 ${item.completed ? 'line-through text-muted-foreground' : ''}`}>
+              <span
+                className={`flex-1 ${item.completed ? "line-through text-muted-foreground" : ""}`}
+              >
                 {item.name}
               </span>
               <Button
@@ -251,5 +267,5 @@ export default function ListView({ listId }: ListViewProps) {
         )}
       </ul>
     </div>
-  )
-} 
+  );
+}

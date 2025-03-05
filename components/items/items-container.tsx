@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Plus, Star, StarOff, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useState } from "react";
+import { Plus, Star, StarOff, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,37 +14,44 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { useAppContext } from "@/context/AppContext"
-import type { Item } from "@/types"
+} from "@/components/ui/alert-dialog";
+import { useAppContext } from "@/context/AppContext";
+import type { Item } from "@/types";
 
 export default function ItemsContainer() {
-  const { items, isLoading, error, addItem, toggleItemEssential, removeItemCompletely } = useAppContext()
-  const [newItemName, setNewItemName] = useState("")
+  const {
+    items,
+    isLoading,
+    error,
+    addItem,
+    toggleItemEssential,
+    removeItemCompletely,
+  } = useAppContext();
+  const [newItemName, setNewItemName] = useState("");
 
   const handleAddItem = () => {
     if (newItemName.trim()) {
-      addItem(newItemName)
-      setNewItemName("")
+      addItem(newItemName);
+      setNewItemName("");
     }
-  }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      handleAddItem()
+      handleAddItem();
     }
-  }
+  };
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
       </div>
-    )
+    );
   }
 
   // Ensure items is always an array
-  const safeItemsArray = Array.isArray(items) ? items : []
+  const safeItemsArray = Array.isArray(items) ? items : [];
 
   return (
     <div className="space-y-4">
@@ -63,18 +70,19 @@ export default function ItemsContainer() {
         </Button>
       </div>
 
-      { error && 
-        <div className="text-center text-red-500 py-4">
-          {error}
-        </div>
-      }
+      {error && <div className="text-center text-red-500 py-4">{error}</div>}
 
       <ul className="space-y-2">
         {safeItemsArray.length === 0 ? (
-          <li className="text-center text-muted-foreground py-4">You have no items. Add one to get started!</li>
+          <li className="text-center text-muted-foreground py-4">
+            You have no items. Add one to get started!
+          </li>
         ) : (
           safeItemsArray.map((item) => (
-            <li key={item.id} className="flex items-center gap-3 p-3 border rounded-md bg-card">
+            <li
+              key={item.id}
+              className="flex items-center gap-3 p-3 border rounded-md bg-card"
+            >
               <span className="flex-1">{item.name}</span>
               <Button
                 variant="ghost"
@@ -90,8 +98,8 @@ export default function ItemsContainer() {
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="icon"
                     className="text-muted-foreground hover:text-destructive"
                   >
@@ -103,8 +111,9 @@ export default function ItemsContainer() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete Item</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete &quot;{item.name}&quot;? This will permanently remove the item
-                      from all lists where it is used. This action cannot be undone.
+                      Are you sure you want to delete &quot;{item.name}&quot;?
+                      This will permanently remove the item from all lists where
+                      it is used. This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -123,5 +132,5 @@ export default function ItemsContainer() {
         )}
       </ul>
     </div>
-  )
-} 
+  );
+}

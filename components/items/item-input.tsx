@@ -1,87 +1,100 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Item } from "@/types"
-import { useState, useRef, useEffect } from "react"
-import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { Item } from "@/types";
+import { useState, useRef, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
-export default function ItemInput({ items = [], showExistingItems = true, onExistingItem, onNewItem }: { items: Item[], showExistingItems: boolean, onExistingItem?: (id: string) => void, onNewItem: (value: string) => void }) {
-  const [open, setOpen] = useState(false)
-  const [inputValue, setInputValue] = useState("")
-  const [filteredItems, setFilteredItems] = useState<Item[]>([])
-  const [selectedIndex, setSelectedIndex] = useState(-1)
-  const wrapperRef = useRef<HTMLDivElement>(null)
+export default function ItemInput({
+  items = [],
+  showExistingItems = true,
+  onExistingItem,
+  onNewItem,
+}: {
+  items: Item[];
+  showExistingItems: boolean;
+  onExistingItem?: (id: string) => void;
+  onNewItem: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Reset selected index when filtered items change
   useEffect(() => {
-    setSelectedIndex(-1)
-  }, [filteredItems])
+    setSelectedIndex(-1);
+  }, [filteredItems]);
 
   // Handle clicking outside to close dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setOpen(false)
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (open && filteredItems.length > 0) {
       if (e.key === "ArrowDown") {
-        e.preventDefault()
-        setSelectedIndex(prev => 
-          prev < filteredItems.length - 1 ? prev + 1 : prev
-        )
+        e.preventDefault();
+        setSelectedIndex((prev) =>
+          prev < filteredItems.length - 1 ? prev + 1 : prev,
+        );
       } else if (e.key === "ArrowUp") {
-        e.preventDefault()
-        setSelectedIndex(prev => prev > 0 ? prev - 1 : -1)
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
       } else if (e.key === "Enter") {
-        e.preventDefault()
+        e.preventDefault();
         if (selectedIndex >= 0) {
-          handleSelect(filteredItems[selectedIndex].id)
+          handleSelect(filteredItems[selectedIndex].id);
         } else if (inputValue.trim()) {
-          onNewItem(inputValue.trim())
-          setInputValue("")
-          setOpen(false)
+          onNewItem(inputValue.trim());
+          setInputValue("");
+          setOpen(false);
         }
       }
     } else if (e.key === "Enter" && inputValue.trim()) {
-      onNewItem(inputValue.trim())
-      setInputValue("")
-      setOpen(false)
+      onNewItem(inputValue.trim());
+      setInputValue("");
+      setOpen(false);
     }
-    
+
     if (e.key === "Escape") {
-      setOpen(false)
-      setSelectedIndex(-1)
+      setOpen(false);
+      setSelectedIndex(-1);
     }
-  }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setInputValue(value)
-    
+    const value = e.target.value;
+    setInputValue(value);
+
     // Filter items based on input
-    const filtered = items.filter(item => 
-      item.name.toLowerCase().includes(value.toLowerCase())
-    )
-    setFilteredItems(filtered)
-    setOpen(value.length > 0)
-  }
+    const filtered = items.filter((item) =>
+      item.name.toLowerCase().includes(value.toLowerCase()),
+    );
+    setFilteredItems(filtered);
+    setOpen(value.length > 0);
+  };
 
   const handleSelect = (selectedValue: string) => {
     if (onExistingItem) {
-      onExistingItem(selectedValue)
+      onExistingItem(selectedValue);
     }
-    
-    setInputValue("")
-    setOpen(false)
-    setSelectedIndex(-1)
-  }
+
+    setInputValue("");
+    setOpen(false);
+    setSelectedIndex(-1);
+  };
 
   return (
     <div className="flex gap-2 mb-8" ref={wrapperRef}>
@@ -93,7 +106,7 @@ export default function ItemInput({ items = [], showExistingItems = true, onExis
           onKeyDown={handleKeyDown}
           className="w-full"
         />
-        
+
         {open && showExistingItems && (
           <div className="absolute w-full mt-1 py-1 bg-popover rounded-md border shadow-md z-50">
             {filteredItems.length === 0 ? (
@@ -107,7 +120,8 @@ export default function ItemInput({ items = [], showExistingItems = true, onExis
                     key={item.id}
                     className={cn(
                       "w-full px-2 py-1.5 text-sm text-left hover:bg-accent hover:text-accent-foreground cursor-default",
-                      selectedIndex === index && "bg-accent text-accent-foreground"
+                      selectedIndex === index &&
+                        "bg-accent text-accent-foreground",
                     )}
                     onClick={() => handleSelect(item.id)}
                     onMouseEnter={() => setSelectedIndex(index)}
@@ -121,5 +135,5 @@ export default function ItemInput({ items = [], showExistingItems = true, onExis
         )}
       </div>
     </div>
-  )
+  );
 }

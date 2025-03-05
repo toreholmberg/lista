@@ -1,47 +1,47 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { NextResponse, type NextRequest } from 'next/server'
-import { CookieOptions } from '@supabase/ssr'
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { NextResponse, type NextRequest } from "next/server";
+import { CookieOptions } from "@supabase/ssr";
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  const { searchParams } = new URL(request.url);
+  const code = searchParams.get("code");
+  const next = searchParams.get("next") ?? "/";
 
   if (code) {
-    const response = NextResponse.redirect(new URL(next, request.url))
+    const response = NextResponse.redirect(new URL(next, request.url));
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           get(name: string) {
-            return request.cookies.get(name)?.value
+            return request.cookies.get(name)?.value;
           },
           set(name: string, value: string, options: CookieOptions) {
             response.cookies.set({
               name,
               value,
               ...options,
-            })
+            });
           },
           remove(name: string, options: CookieOptions) {
             response.cookies.delete({
               name,
               ...options,
-            })
+            });
           },
         },
-      }
-    )
+      },
+    );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      return response
+      return response;
     }
   }
 
   // Return the user to an error page with some instructions
-  return NextResponse.redirect(new URL('/auth/auth-code-error', request.url))
-} 
+  return NextResponse.redirect(new URL("/auth/auth-code-error", request.url));
+}

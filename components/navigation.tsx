@@ -1,42 +1,46 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { createClient } from "@/utils/supabase/client"
-import { Button } from "@/components/ui/button"
-import { LogOut } from "lucide-react"
-import { useEffect, useState } from "react"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function Navigation() {
-  const router = useRouter()
-  const supabase = createClient()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const router = useRouter();
+  const supabase = createClient();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setIsAuthenticated(!!session)
-    }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
 
-    checkAuth()
+    checkAuth();
 
     // Subscribe to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session)
-    })
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
 
     return () => {
-      subscription.unsubscribe()
-    }
-  }, [supabase.auth])
+      subscription.unsubscribe();
+    };
+  }, [supabase.auth]);
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut();
     if (!error) {
-      router.refresh()
-      router.push("/login")
+      router.refresh();
+      router.push("/login");
     }
-  }
+  };
 
   return (
     <nav className="border-b">
@@ -63,5 +67,5 @@ export default function Navigation() {
         )}
       </div>
     </nav>
-  )
-} 
+  );
+}

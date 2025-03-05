@@ -1,4 +1,4 @@
-import ListsContainer from "@/components/lists/lists-container"
+import ListsContainer from "@/components/lists/lists-container";
 
 export default function Home() {
   return (
@@ -6,6 +6,5 @@ export default function Home() {
       <h1 className="text-3xl font-bold mb-6">My Lists</h1>
       <ListsContainer />
     </div>
-  )
+  );
 }
-
