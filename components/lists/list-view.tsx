@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Plus, Star, StarOff, ChevronLeft, Search } from "lucide-react"
+import { Plus, Star, StarOff, ChevronLeft, Search, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -13,10 +13,15 @@ interface ListViewProps {
   listId: string
 }
 
+interface ListItemWithDetails extends Item {
+  completed: boolean
+}
+
 export default function ListView({ listId }: ListViewProps) {
   const { 
     lists, 
-    items, 
+    items,
+    listItems,
     isLoading, 
     error, 
     addItem, 
@@ -101,14 +106,6 @@ export default function ListView({ listId }: ListViewProps) {
     )
   }
 
-  if (error) {
-    return (
-      <div className="text-center text-red-500 py-4">
-        {error}
-      </div>
-    )
-  }
-
   // Ensure lists is always an array
   const safeListsArray = Array.isArray(lists) ? lists : []
   const list = safeListsArray.find(l => l.id === listId)
@@ -129,21 +126,26 @@ export default function ListView({ listId }: ListViewProps) {
     )
   }
 
-  // Ensure itemRefs is always an array
-  const safeItemRefs = Array.isArray(list.itemRefs) ? list.itemRefs : []
-
-  // Get the full item data for each reference
-  const listItems = safeItemRefs
-    .map(ref => {
-      if (!ref || !ref.itemId) return null
-      const item = items.find(item => item.id === ref.itemId)
+  // Get the items for this list
+  const currentListItems: ListItemWithDetails[] = listItems
+    .filter(li => li.list_id === listId)
+    .map(li => {
+      const item = items.find(i => i.id === li.item_id)
       if (!item) return null
       return {
         ...item,
-        completed: ref.completed
+        completed: li.completed
       }
     })
-    .filter((item): item is NonNullable<typeof item> => item !== null)
+    .filter((item): item is ListItemWithDetails => item !== null)
+    .sort((a, b) => {
+      // First sort by completion status (uncompleted first)
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1
+      }
+      // Then sort by name for items with the same completion status
+      return a.name.localeCompare(b.name)
+    })
 
   return (
     <div className="space-y-4">
@@ -157,57 +159,64 @@ export default function ListView({ listId }: ListViewProps) {
         <h1 className="text-xl font-bold ml-4">{list.name}</h1>
       </div>
 
-      <div className="flex gap-2 relative">
-        <div className="flex-1 relative">
-          <Input
-            type="text"
-            placeholder="Add item..."
-            value={newItemName}
-            onChange={(e) => setNewItemName(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => newItemName.trim() && setSuggestions(findItemsByName(newItemName))}
-            className="flex-1"
-          />
-          {showSuggestions && (
-            <div 
-              ref={suggestionsRef}
-              className="absolute z-10 mt-1 w-full bg-background border rounded-md shadow-lg max-h-60 overflow-auto"
-            >
-              {suggestions.length > 0 ? (
-                <ul className="py-1">
-                  {suggestions.map((suggestion, index) => (
-                    <li 
-                      key={suggestion.id}
-                      className={`px-3 py-2 cursor-pointer flex items-center gap-2 ${
-                        index === selectedSuggestionIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'
-                      }`}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                    >
-                      <Search className="h-4 w-4 text-muted-foreground" />
-                      <span>{suggestion.name}</span>
-                      {suggestion.essential && (
-                        <Star className="h-4 w-4 text-yellow-500 ml-auto" />
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="px-3 py-2 text-muted-foreground">No matches found</div>
-              )}
-            </div>
-          )}
+      <div className="space-y-2">
+        <div className="flex gap-2 relative">
+          <div className="flex-1 relative">
+            <Input
+              type="text"
+              placeholder="Add item..."
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => newItemName.trim() && setSuggestions(findItemsByName(newItemName))}
+              className="flex-1"
+            />
+            {showSuggestions && (
+              <div 
+                ref={suggestionsRef}
+                className="absolute z-10 mt-1 w-full bg-background border rounded-md shadow-lg max-h-60 overflow-auto"
+              >
+                {suggestions.length > 0 ? (
+                  <ul className="py-1">
+                    {suggestions.map((suggestion, index) => (
+                      <li 
+                        key={suggestion.id}
+                        className={`px-3 py-2 cursor-pointer flex items-center gap-2 ${
+                          index === selectedSuggestionIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'
+                        }`}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        <Search className="h-4 w-4 text-muted-foreground" />
+                        <span>{suggestion.name}</span>
+                        {suggestion.essential && (
+                          <Star className="h-4 w-4 text-yellow-500 ml-auto" />
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="px-3 py-2 text-muted-foreground">No matches found</div>
+                )}
+              </div>
+            )}
+          </div>
+          <Button onClick={handleAddItem} size="icon">
+            <Plus className="h-4 w-4" />
+            <span className="sr-only">Add item</span>
+          </Button>
         </div>
-        <Button onClick={handleAddItem} size="icon">
-          <Plus className="h-4 w-4" />
-          <span className="sr-only">Add item</span>
-        </Button>
+        {error && (
+          <div className="text-sm text-red-500">
+            {error}
+          </div>
+        )}
       </div>
 
       <ul className="space-y-2">
-        {listItems.length === 0 ? (
+        {currentListItems.length === 0 ? (
           <li className="text-center text-muted-foreground py-4">No items in this list</li>
         ) : (
-          listItems.map((item) => (
+          currentListItems.map((item) => (
             <li key={item.id} className="flex items-center gap-3 p-3 border rounded-md bg-card">
               <Checkbox
                 checked={item.completed}
@@ -232,9 +241,10 @@ export default function ListView({ listId }: ListViewProps) {
                 variant="ghost"
                 size="icon"
                 onClick={() => removeItem(item.id, listId)}
+                className="text-muted-foreground hover:text-destructive"
               >
-                <span className="text-lg leading-none">&times;</span>
-                <span className="sr-only">Remove item</span>
+                <Trash2 className="h-4 w-4" />
+                <span className="sr-only">Remove from list</span>
               </Button>
             </li>
           ))
