@@ -1,6 +1,13 @@
 "use client";
 
-import { Star, StarOff, Trash2, PencilIcon, Loader2 } from "lucide-react";
+import {
+  Star,
+  StarOff,
+  Trash2,
+  PencilIcon,
+  Loader2,
+  Loader,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -52,11 +59,7 @@ export default function ItemList({
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <Loader />;
   }
 
   return (
@@ -77,6 +80,7 @@ export default function ItemList({
                 <Button
                   variant="ghost"
                   size="icon"
+                  className="text-muted-foreground hover:text-destructive cursor-pointer"
                   onClick={() => {
                     setRenameId(item.id);
                     setRenameValue(item.name);
@@ -118,6 +122,7 @@ export default function ItemList({
               variant="ghost"
               size="icon"
               onClick={() => onToggleEssential(item.id)}
+              className="text-muted-foreground hover:text-destructive cursor-pointer"
             >
               {item.essential ? (
                 <Star className="h-4 w-4 text-yellow-500" />
@@ -131,7 +136,7 @@ export default function ItemList({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-muted-foreground hover:text-destructive"
+                  className="text-muted-foreground hover:text-destructive cursor-pointer"
                 >
                   <Trash2 className="h-4 w-4" />
                   <span className="sr-only">Delete item completely</span>
