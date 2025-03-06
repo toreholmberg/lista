@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "./button";
+import { cn } from "@/lib/utils";
 
 export default function BaseList({ children }: { children: React.ReactNode }) {
   return <ul className="space-y-2">{children}</ul>;
@@ -9,9 +10,18 @@ export function BaseListEmpty({ children }: { children: React.ReactNode }) {
   return <li className="text-center text-muted-foreground py-4">{children}</li>;
 }
 
-export function BaseListItem({ children }: { children: React.ReactNode }) {
+export function BaseListItem(props: {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
+  const { children } = props;
   return (
-    <li className="flex items-center border rounded-md bg-card h-12 has-[>a]:hover:bg-accent transition-colors">
+    <li
+      className={
+        "flex items-center border rounded-md bg-card h-12 has-[>a]:hover:bg-accent transition-colors"
+      }
+    >
       {children}
     </li>
   );

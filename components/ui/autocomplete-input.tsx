@@ -6,9 +6,8 @@ import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-export default function ItemInput({
+export default function AutocompleteInput({
   items = [],
-  showExistingItems = true,
   onExistingItem,
   onNewItem,
 }: {
@@ -107,7 +106,7 @@ export default function ItemInput({
           className="w-full"
         />
 
-        {open && showExistingItems && (
+        {open && (
           <div className="absolute w-full mt-1 py-1 bg-popover rounded-md border shadow-md z-50">
             {filteredItems.length === 0 ? (
               <div className="px-2 py-3 text-sm text-muted-foreground text-center">

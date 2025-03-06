@@ -20,6 +20,12 @@ export type ListItem = {
   created_at: string;
 };
 
+export type ListItemWithDetails = ListItem & {
+  id: string;
+  name: string;
+  essential: boolean;
+};
+
 export type Database = {
   public: {
     Tables: {

@@ -8,7 +8,13 @@ import React, {
   ReactNode,
 } from "react";
 import { createClient } from "@/utils/supabase/client";
-import type { Item, List, ListItem, Database } from "@/types";
+import type {
+  Item,
+  List,
+  ListItem,
+  Database,
+  ListItemWithDetails,
+} from "@/types";
 import { toast } from "sonner";
 
 interface AppContextType {
@@ -25,6 +31,9 @@ interface AppContextType {
   createList: (name: string) => Promise<void>;
   deleteList: (listId: string) => Promise<void>;
   findItemsByName: (query: string) => Item[];
+  getList: (listId: string) => List | undefined;
+  getListItems: (listId: string) => ListItemWithDetails[];
+  addItemToList: (itemId: string, listId: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -432,6 +441,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const getListItems = (listId: string): ListItemWithDetails[] => {
+    const filteredListItems = listItems.filter((li) => li.list_id === listId);
+
+    const filteredItems = items.filter((i) =>
+      filteredListItems.some((li) => li.item_id === i.id),
+    );
+
+    const listItemsWithDetails = filteredListItems.map((listItem) => {
+      const item = filteredItems.find((i) => listItem.item_id === i.id);
+      return {
+        ...listItem,
+        id: item?.id || "",
+        name: item?.name || "",
+        essential: item?.essential || false,
+      };
+    });
+
+    return listItemsWithDetails;
+  };
+
+  const addItemToList = async (itemId: string, listId: string) => {
+    try {
+      const { data: listItem, error } = await supabase
+        .from("list_items")
+        .insert({ list_id: listId, item_id: itemId })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setListItems((currentListItems) => [...currentListItems, listItem]);
+    } catch (err) {
+      console.error("Error adding item to list:", err);
+      toast.error("Failed to add item to list");
+    }
+  };
+
+  const getList = (listId: string): List | undefined => {
+    return lists.find((list) => list.id === listId);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -448,6 +498,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         deleteItem,
         renameItem,
         findItemsByName,
+        getListItems,
+        addItemToList,
+        getList,
       }}
     >
       {children}
