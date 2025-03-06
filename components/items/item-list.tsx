@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Star,
-  StarOff,
-  Trash2,
-  PencilIcon,
-  Loader2,
-  Loader,
-} from "lucide-react";
+import { Star, StarOff, Trash2, PencilIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -32,6 +25,10 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
 import { Item } from "@/types";
+import { BaseListButton } from "../ui/base-list";
+import { BaseListEmpty, BaseListItem } from "../ui/base-list";
+import BaseList from "../ui/base-list";
+import Loader from "../ui/loader";
 
 export default function ItemList({
   items,
@@ -63,24 +60,18 @@ export default function ItemList({
   }
 
   return (
-    <ul className="space-y-2">
+    <BaseList>
       {items.length === 0 ? (
-        <li className="text-center text-muted-foreground py-4">
+        <BaseListEmpty>
           You have no items. Add one to get started!
-        </li>
+        </BaseListEmpty>
       ) : (
         items.map((item) => (
-          <li
-            key={item.id}
-            className="flex items-center gap-3 p-3 border rounded-md bg-card"
-          >
-            <span className="flex-1">{item.name}</span>
+          <BaseListItem key={item.id}>
+            <span className="flex-1 p-3">{item.name}</span>
             <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
               <DialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive cursor-pointer"
+                <BaseListButton
                   onClick={() => {
                     setRenameId(item.id);
                     setRenameValue(item.name);
@@ -88,7 +79,7 @@ export default function ItemList({
                 >
                   <PencilIcon className="h-4 w-4" />
                   <span className="sr-only">Rename item</span>
-                </Button>
+                </BaseListButton>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -118,29 +109,20 @@ export default function ItemList({
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onToggleEssential(item.id)}
-              className="text-muted-foreground hover:text-destructive cursor-pointer"
-            >
+            <BaseListButton onClick={() => onToggleEssential(item.id)}>
               {item.essential ? (
                 <Star className="h-4 w-4 text-yellow-500" />
               ) : (
                 <StarOff className="h-4 w-4" />
               )}
               <span className="sr-only">Toggle essential</span>
-            </Button>
+            </BaseListButton>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive cursor-pointer"
-                >
+                <BaseListButton>
                   <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Delete item completely</span>
-                </Button>
+                  <span className="sr-only">Delete item</span>
+                </BaseListButton>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -162,9 +144,9 @@ export default function ItemList({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </li>
+          </BaseListItem>
         ))
       )}
-    </ul>
+    </BaseList>
   );
 }

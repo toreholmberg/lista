@@ -16,6 +16,12 @@ import {
 } from "../ui/alert-dialog";
 import Loader from "../ui/loader";
 import { Button } from "../ui/button";
+import BaseList, {
+  BaseListButton,
+  BaseListEmpty,
+  BaseListItem,
+  BaseListLink,
+} from "../ui/base-list";
 export default function ListList({
   lists,
   deleteList,
@@ -30,33 +36,20 @@ export default function ListList({
   }
 
   return (
-    <ul className="space-y-2">
+    <BaseList>
       {lists.length === 0 ? (
-        <li className="text-center text-muted-foreground py-4">
+        <BaseListEmpty>
           You have no lists. Add one to get started!
-        </li>
+        </BaseListEmpty>
       ) : (
         lists.map((list) => (
-          <li
-            key={list.id}
-            className="flex justify-between   items-center gap-3"
-          >
-            <Link
-              href={`/list/${list.id}`}
-              className="flex items-center flex-grow gap-3 p-3 border rounded-md bg-card hover:bg-accent transition-colors"
-            >
-              <span className="flex-1">{list.name}</span>
-            </Link>
+          <BaseListItem key={list.id}>
+            <BaseListLink href={`/list/${list.id}`}>{list.name}</BaseListLink>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive cursor-pointer"
-                >
+                <BaseListButton>
                   <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Delete list</span>
-                </Button>
+                </BaseListButton>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -78,9 +71,9 @@ export default function ListList({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </li>
+          </BaseListItem>
         ))
       )}
-    </ul>
+    </BaseList>
   );
 }
