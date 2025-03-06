@@ -1,4 +1,4 @@
-import ItemView from "@/components/items/item-view";
+import ItemLibrary from "@/components/items/item-library";
 
 export default function ItemsPage() {
   return (
@@ -7,7 +7,7 @@ export default function ItemsPage() {
       <p className="text-muted-foreground mb-6">
         Add, edit, and manage your items here.
       </p>
-      <ItemView />
+      <ItemLibrary />
     </div>
   );
 }

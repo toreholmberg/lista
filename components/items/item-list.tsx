@@ -1,6 +1,6 @@
 "use client";
 
-import { Star, StarOff, Trash2, PencilIcon } from "lucide-react";
+import { Star, StarOff, Trash2, PencilIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -28,11 +28,13 @@ import { Item } from "@/types";
 
 export default function ItemList({
   items,
+  isLoading,
   onToggleEssential,
   onDelete,
   onRename,
 }: {
   items: Item[];
+  isLoading: boolean;
   onToggleEssential: (itemId: string) => void;
   onDelete: (itemId: string) => void;
   onRename: (itemId: string, newName: string) => void;
@@ -48,6 +50,14 @@ export default function ItemList({
       setIsRenameOpen(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <ul className="space-y-2">

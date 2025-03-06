@@ -9,20 +9,21 @@ import React, {
 } from "react";
 import { createClient } from "@/utils/supabase/client";
 import type { Item, List, ListItem, Database } from "@/types";
+import { toast } from "sonner";
 
 interface AppContextType {
   lists: List[];
   items: Item[];
   listItems: ListItem[];
   isLoading: boolean;
-  error: string | null;
-  addList: (name: string) => Promise<void>;
-  addItem: (name: string, listId?: string) => Promise<void>;
+  createItem: (name: string, listId?: string) => Promise<void>;
+  renameItem: (itemId: string, newName: string) => Promise<void>;
   toggleItemCompleted: (itemId: string, listId: string) => Promise<void>;
   toggleItemEssential: (itemId: string) => Promise<void>;
-  removeItem: (itemId: string, listId: string) => Promise<void>;
-  removeList: (listId: string) => Promise<void>;
-  removeItemCompletely: (itemId: string) => Promise<void>;
+  deleteItem: (itemId: string) => Promise<void>;
+  deleteItemFromList: (itemId: string, listId: string) => Promise<void>;
+  createList: (name: string) => Promise<void>;
+  deleteList: (listId: string) => Promise<void>;
   findItemsByName: (query: string) => Item[];
 }
 
@@ -33,7 +34,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<Item[]>([]);
   const [listItems, setListItems] = useState<ListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
   const supabase = createClient();
 
   // Load data on mount and when auth state changes
@@ -41,7 +42,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        setError(null);
 
         // Get user's items
         const { data: itemsData, error: itemsError } = await supabase
@@ -71,7 +71,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setListItems(listItemsData || []);
       } catch (err) {
         console.error("Error loading data:", err);
-        setError("Failed to load data");
+        toast.error("Error loading data");
       } finally {
         setIsLoading(false);
       }
@@ -114,7 +114,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, [supabase]);
 
-  const addList = async (name: string) => {
+  const createList = async (name: string) => {
     try {
       const {
         data: { session },
@@ -123,7 +123,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (sessionError) throw sessionError;
       if (!session) {
         console.error("Not authenticated - no session");
-        setError("Not authenticated");
+        toast.error("Not authenticated");
         return;
       }
 
@@ -203,11 +203,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       console.error("Error adding list:", err);
-      setError("Failed to add list");
+      toast.error("Failed to add list");
     }
   };
 
-  const addItem = async (name: string, listId?: string) => {
+  const createItem = async (name: string, listId?: string) => {
     try {
       const {
         data: { session },
@@ -216,14 +216,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (sessionError) throw sessionError;
       if (!session) {
         console.error("Not authenticated - no session");
-        setError("Not authenticated");
+        toast.error("Not authenticated");
         return;
       }
 
+      // trim name and check if it's empty
+      const trimmedName = name.trim();
+
+      if (!trimmedName) {
+        toast.warning("Item name cannot be empty");
+        return;
+      }
+
+      // eagerly check if item exists in local state
+      const itemExists = items.some(
+        (item) => item.name.toLowerCase() === trimmedName.toLowerCase(),
+      );
+
+      if (itemExists) {
+        toast.warning("An item with this name already exists");
+        return;
+      }
+
+      // insert item
+      // TODO: check if item already exists in database
       const { data: item, error: itemError } = await supabase
         .from("items")
         .insert({
-          name,
+          name: trimmedName,
           created_by: session.user.id,
         })
         .select()
@@ -252,7 +272,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       console.error("Error adding item:", err);
-      setError("Failed to add item");
+      toast.error("Failed to add item");
     }
   };
 
@@ -283,7 +303,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       );
     } catch (err) {
       console.error("Error toggling item completion:", err);
-      setError("Failed to update item");
+      toast.error("Failed to update item");
     }
   };
 
@@ -312,11 +332,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       );
     } catch (err) {
       console.error("Error toggling item essential status:", err);
-      setError("Failed to update item");
+      toast.error("Failed to update item");
     }
   };
 
-  const removeItem = async (itemId: string, listId: string) => {
+  const deleteItemFromList = async (itemId: string, listId: string) => {
     try {
       const { error } = await supabase
         .from("list_items")
@@ -333,11 +353,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
       );
     } catch (err) {
       console.error("Error removing item:", err);
-      setError("Failed to remove item");
+      toast.error("Failed to remove item");
     }
   };
 
-  const removeList = async (listId: string) => {
+  const renameItem = async (itemId: string, newName: string) => {
+    try {
+      const { error } = await supabase
+        .from("items")
+        .update({ name: newName })
+        .eq("id", itemId);
+
+      if (error) throw error;
+
+      // Update local state
+      setItems((currentItems) =>
+        currentItems.map((i) =>
+          i.id === itemId ? { ...i, name: newName } : i,
+        ),
+      );
+    } catch (err) {
+      console.error("Error renaming item:", err);
+      toast.error("Failed to rename item");
+    }
+  };
+
+  const deleteList = async (listId: string) => {
     try {
       const { error } = await supabase.from("lists").delete().eq("id", listId);
 
@@ -351,11 +392,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       );
     } catch (err) {
       console.error("Error removing list:", err);
-      setError("Failed to remove list");
+      toast.error("Failed to remove list");
     }
   };
 
-  const removeItemCompletely = async (itemId: string) => {
+  const deleteItem = async (itemId: string) => {
     try {
       // First remove all list_items references
       const { error: listItemsError } = await supabase
@@ -380,7 +421,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setItems((currentItems) => currentItems.filter((i) => i.id !== itemId));
     } catch (err) {
       console.error("Error removing item completely:", err);
-      setError("Failed to remove item");
+      toast.error("Failed to remove item");
     }
   };
 
@@ -398,14 +439,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         items,
         listItems,
         isLoading,
-        error,
-        addList,
-        addItem,
+        createList,
+        createItem,
         toggleItemCompleted,
         toggleItemEssential,
-        removeItem,
-        removeList,
-        removeItemCompletely,
+        deleteItemFromList,
+        deleteList,
+        deleteItem,
+        renameItem,
         findItemsByName,
       }}
     >
